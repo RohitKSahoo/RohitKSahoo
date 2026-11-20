@@ -3,7 +3,7 @@ name: Update Tulkun
 on:
   schedule:
     - cron: "0 0 * * *" # Runs daily at midnight UTC
-  workflow_dispatch:     # Allows manual trigger anytime from the Actions tab
+  workflow_dispatch:     # Allows manual trigger anytime from Actions tab
   push:
     branches:
       - main
@@ -15,8 +15,67 @@ jobs:
   tulkun:
     runs-on: ubuntu-latest
     steps:
-      - uses: PramudithaN/git-tulkun@v1
-        with:
-          login: RohitKSahoo
-          view: dive      # Options: side | dive | top
-          window: rolling # Options: annual (Jan 1 reset) | rolling (trailing 365 days)
+      - name: Download git-tulkun binary
+        run: |
+          curl -sL https://github.com/PramudithaN/git-tulkun/releases/download/v1.2.0/git-tulkun-1.2.0-x86_64-unknown-linux-gnu.tar.gz | tar -xz
+          chmod +x git-tulkun
+          sudo mv git-tulkun /usr/local/bin/
+
+      - name: Collect GitHub snapshot
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git-tulkun collect RohitKSahoo --window rolling --output snapshot.json
+
+      - name: Diversify language colors from repos
+        run: |
+          python3 - << 'EOF'
+          import json
+
+          with open("snapshot.json", "r") as f:
+              data = json.load(f)
+
+          # Prioritize distinct languages across Rohit's repositories:
+          # Slot 1 (Belly & Armor): Kotlin (#A97BFF - Purple)
+          # Slot 2 (Sensor Crest Core): JavaScript (#F1E05A - Gold)
+          # Slot 3 (Crest Tip Highlights): Python (#3572A5 - Blue)
+          palette = [
+              {"name": "Kotlin", "hex_color": "#A97BFF", "repo_count": 4},
+              {"name": "JavaScript", "hex_color": "#F1E05A", "repo_count": 1},
+              {"name": "Python", "hex_color": "#3572A5", "repo_count": 9},
+              {"name": "TypeScript", "hex_color": "#3178C6", "repo_count": 4},
+              {"name": "HTML", "hex_color": "#E34C26", "repo_count": 1},
+          ]
+
+          existing_counts = {l.get("name"): l.get("repo_count") for l in data.get("languages", []) if "name" in l}
+          for p in palette:
+              if p["name"] in existing_counts and existing_counts[p["name"]]:
+                  p["repo_count"] = existing_counts[p["name"]]
+
+          data["languages"] = palette
+
+          with open("snapshot.json", "w") as f:
+              json.dump(data, f, indent=2)
+          EOF
+
+      - name: Render Tulkun
+        run: |
+          git-tulkun render snapshot.json --output-dir tulkun --view dive
+
+      - name: Publish to output branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          remote_url="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          work_dir="$RUNNER_TEMP/tulkun-publish"
+          rm -rf "$work_dir"
+          mkdir -p "$work_dir/tulkun"
+          cp tulkun/tulkun.gif tulkun/tulkun.png tulkun/share-card.png "$work_dir/tulkun/"
+          cd "$work_dir"
+          git init -q
+          git checkout -q --orphan output
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tulkun/
+          git commit -q -m "chore: update Tulkun with diverse repo language colors"
+          git push -f "$remote_url" output:output

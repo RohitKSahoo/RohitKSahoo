@@ -18,5 +18,5 @@ jobs:
       - uses: PramudithaN/git-tulkun@v1
         with:
           login: RohitKSahoo
-          view: side      # Options: side | dive | top
-          window: annual  # Options: annual (Jan 1 reset) | rolling (trailing 365 days)
+          view: dive      # Options: side | dive | top
+          window: rolling # Options: annual (Jan 1 reset) | rolling (trailing 365 days)

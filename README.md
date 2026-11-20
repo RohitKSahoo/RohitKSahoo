@@ -14,7 +14,7 @@
     <img src="https://raw.githubusercontent.com/RohitKSahoo/RohitKSahoo/output/tulkun/tulkun.gif" width="640" alt="Rohit's git-tulkun swimming" />
   </a>
   <br />
-  <em>Grows from a baby calf into an adult bull based on annual GitHub activity & coding languages.</em>
+  <em>Grows from a baby calf into an adult bull based on rolling GitHub activity & coding languages.</em>
 </p>
 
 ---

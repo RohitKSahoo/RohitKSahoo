@@ -16,10 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download git-tulkun binary
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          curl -sL https://github.com/PramudithaN/git-tulkun/releases/download/v1.2.0/git-tulkun-1.2.0-x86_64-unknown-linux-gnu.tar.gz | tar -xz
-          chmod +x git-tulkun
-          sudo mv git-tulkun /usr/local/bin/
+          gh release download v1.2.0 --repo PramudithaN/git-tulkun --pattern "git-tulkun-1.2.0-x86_64-unknown-linux-gnu.tar.gz"
+          tar -xzf git-tulkun-1.2.0-x86_64-unknown-linux-gnu.tar.gz
+          find . -name "git-tulkun" -type f -exec chmod +x {} +
+          find . -name "git-tulkun" -type f -exec sudo mv {} /usr/local/bin/git-tulkun \;
 
       - name: Collect GitHub snapshot
         env:

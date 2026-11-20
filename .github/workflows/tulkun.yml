@@ -1,0 +1,22 @@
+name: Update Tulkun
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Runs daily at midnight UTC
+  workflow_dispatch:     # Allows manual trigger anytime from the Actions tab
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  tulkun:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: PramudithaN/git-tulkun@v1
+        with:
+          login: RohitKSahoo
+          view: side      # Options: side | dive | top
+          window: annual  # Options: annual (Jan 1 reset) | rolling (trailing 365 days)
